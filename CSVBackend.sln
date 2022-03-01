@@ -5,6 +5,10 @@ VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVBackend", "CSVBackend\CSVBackend.csproj", "{61251217-C977-4E4E-88D8-FDEFDEECD364}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{138A82EC-0F5B-4496-AA20-2E7FB393CD24}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDB", "MongoDB\MongoDB.csproj", "{BB556974-BFB1-4E6A-B154-481AE89886C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +19,16 @@ Global
 		{61251217-C977-4E4E-88D8-FDEFDEECD364}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61251217-C977-4E4E-88D8-FDEFDEECD364}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61251217-C977-4E4E-88D8-FDEFDEECD364}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB556974-BFB1-4E6A-B154-481AE89886C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB556974-BFB1-4E6A-B154-481AE89886C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB556974-BFB1-4E6A-B154-481AE89886C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB556974-BFB1-4E6A-B154-481AE89886C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BB556974-BFB1-4E6A-B154-481AE89886C0} = {138A82EC-0F5B-4496-AA20-2E7FB393CD24}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {94D73DED-7002-4EE3-96C7-EFAF1690E70C}
