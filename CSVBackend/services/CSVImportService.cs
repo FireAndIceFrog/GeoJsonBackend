@@ -1,7 +1,10 @@
 ﻿using MongoDB;
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
-using Newtonsoft.Json.Linq;
+using System.Linq;
+using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace CSVBackend.services
 {
@@ -13,15 +16,20 @@ namespace CSVBackend.services
             _mongoDataAccess = mongoDataAccess;
         }
 
-        public async Task<JArray> GetWeeklyDataAsync()
+        public async Task<string> GetWeeklyDataAsync()
         {
-            await Task.CompletedTask;
-            return new JArray();
+            var documents = await _mongoDataAccess.GetDocumentsAsync("csv");
+            var documentsList = documents.ToList();
+            documentsList.Sort((x, y) => -((BsonTimestamp)x.GetValue("timestamp")).CompareTo((BsonTimestamp)y.GetValue("timestamp")));
+            return documentsList[0]["data"].ToJson();
         }
 
-        public async Task<bool> SetWeeklyDataAsync(string weeklyData)
+        public async Task<bool> SetWeeklyDataAsync(JsonElement weeklyData)
         {
-            var document = BsonSerializer.Deserialize<BsonDocument>(weeklyData);
+            var jsonData =  Newtonsoft.Json.JsonConvert.SerializeObject(new { data = Newtonsoft.Json.JsonConvert.DeserializeObject(weeklyData.ToString()) });
+            var document = new BsonDocument();
+            var success = BsonDocument.TryParse(jsonData, out document);
+            document.InsertAt(0, new BsonElement("timestamp", new BsonTimestamp(0, 0)));
             await _mongoDataAccess.InsertOneAsync("csv", document);
             return true;
         }

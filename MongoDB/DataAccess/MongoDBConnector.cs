@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace MongoDB;
 
@@ -20,6 +21,12 @@ public class MongoDBConnector : IMongoDBConnector
     public async Task InsertOneAsync(string collectionName, BsonDocument document)
     {
         await getCollection(collectionName).InsertOneAsync(document);
+    }
+
+    public async Task<IMongoQueryable<BsonDocument>> GetDocumentsAsync(string collectionName)
+    {
+        var data = await Task.FromResult(getCollection(collectionName).AsQueryable());
+        return data;
     }
 
 }

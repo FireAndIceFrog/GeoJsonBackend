@@ -1,12 +1,14 @@
 using CSVBackend.services;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using MongoDB.Bson;
+using System.Text.Json;
 
 namespace CSVBackend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [EnableCors("MyPolicy")]
     public class CSVImportController : ControllerBase
     {
         
@@ -23,16 +25,15 @@ namespace CSVBackend.Controllers
         [Route("GetWeeklyData")]
         public async Task<string> GetWeeklyData()
         {
-            var data = await _csvImportService.GetWeeklyDataAsync();
-            string jsonresp = JsonConvert.SerializeObject(data);
-            return jsonresp;
+            var response = await _csvImportService.GetWeeklyDataAsync();
+            return response;
         }
 
         [HttpPost]
         [Route("SetWeeklyData")]
-        public async Task SetWeeklyDataAsync([FromBody] string weeklyData)
+        public async Task SetWeeklyDataAsync([FromBody] object weeklyData)
         {
-            await _csvImportService.SetWeeklyDataAsync(weeklyData);
+            await _csvImportService.SetWeeklyDataAsync((JsonElement)weeklyData);
         }
     }
 }
