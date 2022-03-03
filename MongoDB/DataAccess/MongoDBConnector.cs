@@ -23,10 +23,19 @@ public class MongoDBConnector : IMongoDBConnector
         await getCollection(collectionName).InsertOneAsync(document);
     }
 
+    public async Task UpdateOneAsync(string collectionName, BsonDocument oldDoc, BsonDocument document)
+    {
+        await getCollection(collectionName).UpdateOneAsync(oldDoc, document);
+    }
+
     public async Task<IMongoQueryable<BsonDocument>> GetDocumentsAsync(string collectionName)
     {
         var data = await Task.FromResult(getCollection(collectionName).AsQueryable());
         return data;
     }
 
+    public async Task DeleteDocAsync(string collectionName, BsonDocument document)
+    {
+        await getCollection(collectionName).DeleteOneAsync(document);
+    }
 }

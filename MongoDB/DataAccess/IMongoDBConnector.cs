@@ -7,5 +7,7 @@ namespace MongoDB
     {
         Task InsertOneAsync(string collectionName, BsonDocument document);
         Task<IMongoQueryable<BsonDocument>> GetDocumentsAsync(string collectionName);
+        Task DeleteDocAsync(string collectionName, BsonDocument document);
+        Task UpdateOneAsync(string collectionName, BsonDocument oldDoc, BsonDocument document);
     }
 }

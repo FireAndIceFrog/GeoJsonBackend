@@ -23,9 +23,9 @@ namespace CSVBackend.Controllers
 
         [HttpGet]
         [Route("GetWeeklyData")]
-        public async Task<string> GetWeeklyData()
+        public async Task<string> GetWeeklyData(int partNumber = 0)
         {
-            var response = await _csvImportService.GetWeeklyDataAsync();
+            var response = await _csvImportService.GetWeeklyDataAsync(partNumber);
             return response;
         }
 
@@ -34,6 +34,27 @@ namespace CSVBackend.Controllers
         public async Task SetWeeklyDataAsync([FromBody] object weeklyData)
         {
             await _csvImportService.SetWeeklyDataAsync((JsonElement)weeklyData);
+        }
+
+        [HttpPut]
+        [Route("UpdateData")]
+        public async Task UpdateWeeklyDataAsync([FromBody] object weeklyData, int partNumber)
+        {
+            await _csvImportService.UpdateWeeklyDataAsync((JsonElement)weeklyData, partNumber);
+        }
+
+        [HttpDelete]
+        [Route("ClearAllData")]
+        public async Task ClearAllData()
+        {
+            await _csvImportService.ClearAllData();
+        }
+
+        [HttpGet]
+        [Route("Count")]
+        public async Task<int> CountAllData()
+        {
+            return await _csvImportService.CountAllData();
         }
     }
 }
