@@ -23,6 +23,11 @@ public class MongoDBConnector : IMongoDBConnector
         await getCollection(collectionName).InsertOneAsync(document);
     }
 
+    public async Task InsertManyAsync(string collectionName, IEnumerable<BsonDocument> documents)
+    {
+        await getCollection(collectionName).InsertManyAsync(documents);
+    }
+
     public async Task UpdateOneAsync(string collectionName, BsonDocument oldDoc, BsonDocument document)
     {
         await getCollection(collectionName).UpdateOneAsync(oldDoc, document);

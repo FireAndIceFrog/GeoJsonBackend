@@ -22,39 +22,50 @@ namespace CSVBackend.Controllers
         }
 
         [HttpGet]
-        [Route("GetWeeklyData")]
-        public async Task<string> GetWeeklyData(int partNumber = 0)
+        [Route("GetRows")]
+        public async Task<string> GetRows(string? TableId, int start = 0, int numRows = 100)
         {
-            var response = await _csvImportService.GetWeeklyDataAsync(partNumber);
+            var response = await _csvImportService.GetRows(TableId == null? null : Guid.Parse(TableId), start, numRows);
             return response;
         }
 
         [HttpPost]
-        [Route("SetWeeklyData")]
-        public async Task SetWeeklyDataAsync([FromBody] object weeklyData)
+        [Route("SetRows")]
+        public async Task SetWeeklyDataAsync([FromBody] object data, string TableId)
         {
-            await _csvImportService.SetWeeklyDataAsync((JsonElement)weeklyData);
+            await _csvImportService.SaveTableDataAsync(Guid.Parse(TableId), (JsonElement)data);
         }
 
-        [HttpPut]
-        [Route("UpdateData")]
-        public async Task UpdateWeeklyDataAsync([FromBody] object weeklyData, int partNumber)
+        [HttpGet]
+        [Route("GetHeaders")]
+        public async Task<string> GetHeaders(string? TableId)
         {
-            await _csvImportService.UpdateWeeklyDataAsync((JsonElement)weeklyData, partNumber);
+            var response = await _csvImportService.GetTableHeadersStringAsync(TableId == null ? null : Guid.Parse(TableId));
+            return response;
         }
+
+        [HttpGet]
+        [Route("GetMostRecentTableId")]
+        public async Task<string> GetMostRecentTableId()
+        {
+            var response = await _csvImportService.GetMostRecentTableId();
+            return response.ToString();
+        }
+
+        [HttpPost]
+        [Route("SetHeaders")]
+        public async Task<string> SetHeaders([FromBody] object data, bool createNewId)
+        {
+            var tableId = await _csvImportService.SaveTableHeadersAsync((JsonElement)data, createNewId: createNewId);
+            return tableId;
+        }
+
 
         [HttpDelete]
         [Route("ClearAllData")]
         public async Task ClearAllData()
         {
             await _csvImportService.ClearAllData();
-        }
-
-        [HttpGet]
-        [Route("Count")]
-        public async Task<int> CountAllData()
-        {
-            return await _csvImportService.CountAllData();
         }
     }
 }

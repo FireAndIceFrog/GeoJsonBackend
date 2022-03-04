@@ -5,9 +5,10 @@ namespace CSVBackend.services
     public interface ICSVImportService
     {
         Task<bool> ClearAllData();
-        Task<string> GetWeeklyDataAsync(int partNumber = 0);
-        Task<bool> SetWeeklyDataAsync(JsonElement weeklyData);
-        Task UpdateWeeklyDataAsync(JsonElement weeklyData, int part);
-        Task<int> CountAllData();
+        Task<Guid> GetMostRecentTableId();
+        Task<string> GetRows(Guid? id, int startRow, int endRow);
+        Task<string> GetTableHeadersStringAsync(Guid? id);
+        Task SaveTableDataAsync(Guid id, JsonElement tableData);
+        Task<string> SaveTableHeadersAsync(JsonElement headers, bool createNewId = true);
     }
 }
