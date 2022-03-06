@@ -191,6 +191,11 @@ namespace CSVBackend.services
                 return "";
             }
 
+            if(id != null && id != Guid.Empty)
+            {
+                _id = (Guid)id;
+            }
+
             var BsonId = new BsonBinaryData(_id, GuidRepresentation.Standard);
             var docs = await _mongoDataAccess.GetDocumentsAsync(_collectionName);
             var counts = await docs.CountAsync();
