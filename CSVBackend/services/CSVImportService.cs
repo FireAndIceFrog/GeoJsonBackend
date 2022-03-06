@@ -213,13 +213,9 @@ namespace CSVBackend.services
 
         public async Task<bool> ClearAllData()
         {
-            var data = await _mongoDataAccess.GetDocumentsAsync(_collectionName);
-            var dataTasks = data.AsParallel().Select(async (x) => await _mongoDataAccess.DeleteDocAsync(_collectionName, x));
-            await Task.WhenAll(dataTasks);
 
-            var headers = await _mongoDataAccess.GetDocumentsAsync(_tableHeaderName);
-            var headerTasks = headers.AsParallel().Select(async (x) => await _mongoDataAccess.DeleteDocAsync(_tableHeaderName, x));
-            await Task.WhenAll(headerTasks);
+            await _mongoDataAccess.DeleteAllAsync(_collectionName);
+            await _mongoDataAccess.DeleteAllAsync(_tableHeaderName);
 
             return true;
         }

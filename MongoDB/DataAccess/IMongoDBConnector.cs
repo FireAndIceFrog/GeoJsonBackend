@@ -10,5 +10,6 @@ namespace MongoDB
         Task DeleteDocAsync(string collectionName, BsonDocument document);
         Task UpdateOneAsync(string collectionName, BsonDocument oldDoc, BsonDocument document);
         Task InsertManyAsync(string collectionName, IEnumerable<BsonDocument> documents);
+        Task DeleteAllAsync(string collectionName);
     }
 }
