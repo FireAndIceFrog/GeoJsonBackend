@@ -2,6 +2,7 @@ using CSVBackend.services;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
+using MongoDB.Models;
 using System.Text.Json;
 
 namespace CSVBackend.Controllers
@@ -21,11 +22,11 @@ namespace CSVBackend.Controllers
             _csvImportService = csvImporter;
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("GetRows")]
-        public async Task<string> GetRows(string? TableId, int start = 0, int numRows = 100)
+        public async Task<string> GetRows([FromBody] object data, string? TableId, int start = 0, int numRows = 100)
         {
-            var response = await _csvImportService.GetRows(TableId == null? null : Guid.Parse(TableId), start, numRows);
+            var response = await _csvImportService.GetRows(TableId == null? null : Guid.Parse(TableId), start, numRows, data);
             return response;
         }
 

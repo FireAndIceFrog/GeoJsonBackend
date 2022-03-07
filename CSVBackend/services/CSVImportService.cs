@@ -1,6 +1,9 @@
 ﻿using MongoDB;
 using MongoDB.Bson;
 using MongoDB.Driver.Linq;
+using MongoDB.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Text.Json;
 
@@ -21,6 +24,44 @@ namespace CSVBackend.services
         private readonly string headerIdField = "HeaderId";
         private Guid _id = Guid.Empty;
 
+        private (List<FilterModel>?, SorterModel?) GetFiltersAndSorters(object data)
+        {
+            List<FilterModel>? filtersModel = null;
+            
+
+            JObject newData = JsonConvert.DeserializeObject<JObject>(data.ToString() ?? "");
+            JToken filterTokens = newData?.GetValue("filters");
+            List<JToken>? filters = filterTokens?.ToList();
+            if (filters != null && filters.Any())
+            {
+                filtersModel = new List<FilterModel>();
+                foreach(var filter in filters)
+                {
+                    string? key = filter?.Value<string>("key");
+                    string? operation = filter?.Value<string>("operation");
+                    string? comparator = filter?.Value<string>("comparator");
+                    if(key != null && operation != null && comparator != null)
+                    {
+                        var convertedFilter = new FilterModel(key, operation, comparator);
+                        filtersModel.Add(convertedFilter);
+                    }
+                }
+            }
+
+            SorterModel? convertedSorter = null;
+            JToken sorter = newData?.GetValue("sorter");
+            if (sorter != null)
+            {
+                string? key = sorter?.Value<string>("key");
+                bool? IsAscending = sorter?.Value<bool>("isAscending");
+                if(key != null && IsAscending != null)
+                {
+                    convertedSorter = new SorterModel(key, (bool)IsAscending);
+                }
+            }
+
+            return (filtersModel, convertedSorter);
+        }
         private BsonDocument? ConvertJsonToBson(JsonElement weeklyData)
         {
             var data = Newtonsoft.Json.JsonConvert.DeserializeObject(weeklyData.ToString());
@@ -178,7 +219,7 @@ namespace CSVBackend.services
             }
         }
 
-        public async Task<string> GetRows(Guid? id, int startRow, int endRow)
+        public async Task<string> GetRows(Guid? id, int startRow, int endRow, object body)
         {
             if (id == null || _id == Guid.Empty)
             {
@@ -196,20 +237,39 @@ namespace CSVBackend.services
                 _id = (Guid)id;
             }
 
+            var (filters, sorter) = GetFiltersAndSorters(body);
+
             var BsonId = new BsonBinaryData(_id, GuidRepresentation.Standard);
             var docs = await _mongoDataAccess.GetDocumentsAsync(_collectionName);
+
+            docs = docs.Where(x => x[headerIdField] == BsonId);
             var counts = await docs.CountAsync();
 
-            var filteredDocs = docs.Where(x => x[headerIdField] == BsonId).Skip(startRow).Take(endRow);
+            if (filters != null)
+            {
+                foreach(var filter in filters)
+                {
+                    if (filter != null)
+                    {
+                        docs = docs.Where(filter.CompareTo());
+                    }
+                }
+            }
 
+            if (sorter != null)
+            {
+                if (sorter.IsAscending)
+                    docs = docs.OrderBy((x) => x[sorter.Key]);
+                else
+                    docs = docs.OrderByDescending((x) => x[sorter.Key]);
+            }
 
+            var filteredDocs = docs.Skip(startRow).Take(endRow);
             var jsonParsedDocs = filteredDocs.ToList().Select(x => {
-                
                 return BsonTypeMapper.MapToDotNetValue(x);
             });
 
-
-            return Newtonsoft.Json.JsonConvert.SerializeObject(new
+            return JsonConvert.SerializeObject(new
             {
                 counts,
                 data = jsonParsedDocs
