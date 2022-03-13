@@ -27,8 +27,6 @@ namespace CSVBackend.services
         private (List<FilterModel>?, SorterModel?) GetFiltersAndSorters(object data)
         {
             List<FilterModel>? filtersModel = null;
-            
-
             JObject newData = JsonConvert.DeserializeObject<JObject>(data.ToString() ?? "");
             JToken filterTokens = newData?.GetValue("filters");
             List<JToken>? filters = filterTokens?.ToList();
@@ -77,11 +75,31 @@ namespace CSVBackend.services
 
         private IEnumerable<BsonDocument?> ConvertJsonArrayToBsonArray(JsonElement weeklyData)
         {
-            IEnumerable<object>? data = (IEnumerable<object>?)Newtonsoft.Json.JsonConvert.DeserializeObject(weeklyData.ToString());
+            var data = Newtonsoft.Json.JsonConvert.DeserializeObject(weeklyData.ToString());
             if(data != null)
             {
-                var dataArray = data.Select(x => {
-                    return BsonDocument.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(x));
+                var dataArray = ((IEnumerable<object>) data).Select(item => {
+                    var bsonVals = ((IEnumerable<object>)item).Select(rows => 
+                    {
+                        string val = (string?)((JValue)((JProperty)rows).Value).Value ?? "";
+                        object valObj;
+                        var isBool = bool.TryParse(val, out var BoolVal);
+                        var isDouble = double.TryParse(val, out var DoubleVal);
+
+                        if (isBool)
+                            valObj = BoolVal;
+                        else if (isDouble)
+                            valObj = DoubleVal;
+                        else
+                            valObj = val;
+
+                        var actualVal = BsonValue.Create(valObj);
+                        var elm = new BsonElement(((JProperty)rows).Name, actualVal);
+                        return elm;
+                    });
+
+                    var doc = new BsonDocument(bsonVals);
+                    return doc;
                 });
                 return (IEnumerable<BsonDocument?>)dataArray;
             }
@@ -247,10 +265,11 @@ namespace CSVBackend.services
 
             if (filters != null)
             {
-                foreach(var filter in filters)
+                foreach (var filter in filters)
                 {
                     if (filter != null)
                     {
+
                         docs = docs.Where(filter.CompareTo());
                     }
                 }
