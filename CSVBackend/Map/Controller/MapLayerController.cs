@@ -1,4 +1,4 @@
-using CSVBackend.services;
+using CSVBackend.Ryan.services;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -10,13 +10,13 @@ namespace CSVBackend.Controllers
     [ApiController]
     [Route("[controller]")]
     [EnableCors("MyPolicy")]
-    public class CSVImportController : ControllerBase
+    public class MapLayerController : ControllerBase
     {
         
-        private readonly ILogger<CSVImportController> _logger;
+        private readonly ILogger<MapLayerController> _logger;
         private readonly ICSVImportService _csvImportService;
 
-        public CSVImportController(ILogger<CSVImportController> logger, ICSVImportService csvImporter)
+        public MapLayerController(ILogger<MapLayerController> logger, ICSVImportService csvImporter)
         {
             _logger = logger;
             _csvImportService = csvImporter;
