@@ -1,3 +1,4 @@
+using CSVBackend.Map.Services;
 using CSVBackend.Ryan.services;
 using MongoDB;
 
@@ -25,6 +26,7 @@ builder.Services.AddSwaggerGen();
 var mongConnString = builder.Configuration.GetValue<string>("MongoDBConnString");
 var mongoDBName = builder.Configuration.GetValue<string>("MongoDbName");
 builder.Services.AddSingleton<IMongoDBConnector>(new MongoDBConnector(mongConnString, mongoDBName));
+builder.Services.AddSingleton<IMapLayerService, MapLayerService>();
 builder.Services.AddSingleton<ICSVImportService, CSVImportService>();
 
 var app = builder.Build();

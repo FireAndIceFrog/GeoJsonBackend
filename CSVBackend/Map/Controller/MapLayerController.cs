@@ -4,69 +4,39 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Models;
 using System.Text.Json;
+using GeoJSON.Net.Feature;
+using GeoJSON.Net.Geometry;
+using CSVBackend.Map.Services;
 
 namespace CSVBackend.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("MapLayers")]
     [EnableCors("MyPolicy")]
     public class MapLayerController : ControllerBase
     {
         
         private readonly ILogger<MapLayerController> _logger;
-        private readonly ICSVImportService _csvImportService;
+        private readonly IMapLayerService _mapLayer;
 
-        public MapLayerController(ILogger<MapLayerController> logger, ICSVImportService csvImporter)
+        public MapLayerController(ILogger<MapLayerController> logger, IMapLayerService mapLayer)
         {
             _logger = logger;
-            _csvImportService = csvImporter;
+            _mapLayer = mapLayer;
         }
 
         [HttpPost]
-        [Route("GetRows")]
-        public async Task<string> GetRows([FromBody] object data, string? TableId, int start = 0, int numRows = 100)
+        [Route("CreateFeature")]
+        public async Task CreateFeature([FromBody] object data)
         {
-            var response = await _csvImportService.GetRows(TableId == null? null : Guid.Parse(TableId), start, numRows, data);
-            return response;
-        }
-
-        [HttpPost]
-        [Route("SetRows")]
-        public async Task SetWeeklyDataAsync([FromBody] object data, string TableId)
-        {
-            await _csvImportService.SaveTableDataAsync(Guid.Parse(TableId), (JsonElement)data);
+            await _mapLayer.CreateFeature(data);
         }
 
         [HttpGet]
-        [Route("GetHeaders")]
-        public async Task<string> GetHeaders(string? TableId)
+        [Route("GetFeature")]
+        public async Task<string> GetFeature(double x, double y, double z)
         {
-            var response = await _csvImportService.GetTableHeadersStringAsync(TableId == null ? null : Guid.Parse(TableId));
-            return response;
-        }
-
-        [HttpGet]
-        [Route("GetMostRecentTableId")]
-        public async Task<string> GetMostRecentTableId()
-        {
-            var response = await _csvImportService.GetMostRecentTableId();
-            return response.ToString();
-        }
-
-        [HttpPost]
-        [Route("SetHeaders")]
-        public async Task<string> SetHeaders([FromBody] object data, bool createNewId)
-        {
-            var tableId = await _csvImportService.SaveTableHeadersAsync((JsonElement)data, createNewId: createNewId);
-            return tableId;
-        }
-
-
-        [HttpDelete]
-        [Route("ClearAllData")]
-        public async Task ClearAllData()
-        {
-            await _csvImportService.ClearAllData();
+            return await _mapLayer.GetFeatures(x, y, z);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
 using MongoDB.Driver.Linq;
-using MongoDB.Models;
 
 namespace MongoDB;
 
@@ -48,5 +48,15 @@ public class MongoDBConnector : IMongoDBConnector
     public async Task DeleteAllAsync(string collectionName)
     {
         await getCollection(collectionName).DeleteManyAsync(new BsonDocument());
+    }
+
+    public async Task<IAsyncCursor<BsonDocument>> FindNearAsync(string collectionName, double x, double y)
+    {
+        var point = new GeoJsonPoint<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(x, y));
+        var builder = Builders<BsonDocument>.Filter;
+        var filter = builder.Near("geometry", point);
+        var docs = getCollection(collectionName);
+
+        return await docs.FindAsync(filter);
     }
 }

@@ -1,3 +1,4 @@
+using CSVBackend.Map.Services;
 using CSVBackend.Ryan.services;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ using System.Text.Json;
 namespace CSVBackend.Ryan.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("CSVImport")]
     [EnableCors("MyPolicy")]
     public class MapLayerController : ControllerBase
     {
