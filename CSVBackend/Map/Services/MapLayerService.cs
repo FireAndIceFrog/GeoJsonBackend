@@ -3,6 +3,9 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
+using Newtonsoft.Json;
+using CSVBackend.Map.models;
+using System.Linq;
 
 namespace CSVBackend.Map.Services;
 
@@ -39,18 +42,107 @@ public class MapLayerService : IMapLayerService
                 return doc;
             });
 
-
-
         return new  { features = processedDocs }.ToJson();
+    }
+
+    public async Task UpdateFeatures(object data)
+    {
+        if(data == null)
+        {
+            return;
+        }
+        var deserializedData = JsonConvert.DeserializeObject<GeoJsonModelList<dynamic>>(data.ToString());
+
+        var tasks = deserializedData?.features?.Select(async (item) =>
+        {
+            if (item?.geometry?.coordinates != null)
+            {
+                item.geometry.coordinates = item.geometry.coordinates.Select((ring) =>
+                {
+                    return ring.Select((point) =>
+                    {
+                        if (point is JArray)
+                            return (point as JArray).Select((coordinate) => double.Parse(coordinate.ToString()));
+                        else
+                            return double.Parse(point);
+                    })
+                    .ToList();
+                })
+                .ToList();
+            }
+            
+            var update = new BsonDocument()
+            {
+                new BsonElement("_id", new ObjectId(item?.properties?.id ?? "null")),
+                new BsonElement("type", new BsonString(item?.type)),
+                new BsonElement("geometry", new BsonDocument()
+                {
+                    new BsonElement("type", new BsonString(item?.geometry?.type)),
+                    new BsonElement("coordinates", new BsonArray(item?.geometry?.coordinates)),
+                }),
+                new BsonElement("properties", new BsonDocument())
+            };
+
+
+            var builder = Builders<BsonDocument>.Filter;
+            return await _mongoDataAccess.ReplaceOneAsync(_collectionName, builder.Eq("_id", new ObjectId(item?.properties?.id)), update);
+        })
+        .ToArray();
+
+        if(tasks != null && tasks.Any())
+        {
+            var results = await Task.WhenAll(tasks);
+        }
+        return;
     }
 
     public async Task CreateFeature(object data)
     {
-        var actualVal = BsonDocument.Parse(data.ToString());
-        if (actualVal != null)
+        if (data == null)
         {
-            await _mongoDataAccess.InsertOneAsync(_collectionName, actualVal);
+            return;
         }
+        var deserializedData = JsonConvert.DeserializeObject<GeoJsonModelList<dynamic>>(data.ToString());
+
+        var tasks = deserializedData?.features?.Select(async (item) =>
+        {
+            if (item?.geometry?.coordinates != null)
+            {
+                item.geometry.coordinates = item.geometry.coordinates.Select((ring) =>
+                {
+                    return ring.Select((point) =>
+                    {
+                        if (point is JArray)
+                            return (point as JArray).Select((coordinate) => double.Parse(coordinate.ToString()));
+                        else
+                            return double.Parse(point);
+                    })
+                    .ToList();
+                })
+                .ToList();
+            }
+
+            var insert = new BsonDocument()
+            {
+                new BsonElement("type", new BsonString(item?.type)),
+                new BsonElement("geometry", new BsonDocument()
+                {
+                    new BsonElement("type", new BsonString(item?.geometry?.type)),
+                    new BsonElement("coordinates", new BsonArray(item?.geometry?.coordinates)),
+                }),
+                new BsonElement("properties", new BsonDocument())
+            };
+
+
+            return _mongoDataAccess.InsertOneAsync(_collectionName, insert);
+        })
+        .ToArray();
+
+        if (tasks != null && tasks.Any())
+        {
+            var results = await Task.WhenAll(tasks);
+        }
+        return;
     }
 
     public async Task<bool> ClearAllData()
@@ -60,5 +152,14 @@ public class MapLayerService : IMapLayerService
         await _mongoDataAccess.DeleteAllAsync(_tableHeaderName);
 
         return true;
+    }
+
+    public async Task DeleteFeatureAsync(object data)
+    {
+
+        var deserializedData = JsonConvert.DeserializeObject<GeoJsonModel<dynamic>>(data.ToString());
+        var id = new ObjectId(deserializedData!.properties!.id);
+        var builder = Builders<BsonDocument>.Filter;
+        await _mongoDataAccess.DeleteDocAsync(_collectionName, builder.Eq("_id", id));
     }
 }

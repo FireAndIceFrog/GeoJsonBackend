@@ -9,8 +9,9 @@ namespace MongoDB
     {
         Task InsertOneAsync(string collectionName, BsonDocument document);
         Task<IMongoQueryable<BsonDocument>> GetDocumentsAsync(string collectionName);
-        Task DeleteDocAsync(string collectionName, BsonDocument document);
-        Task UpdateOneAsync(string collectionName, BsonDocument oldDoc, BsonDocument document);
+        Task DeleteDocAsync(string collectionName, FilterDefinition<BsonDocument> document);
+        Task<UpdateResult> UpdateOneAsync(string collectionName, FilterDefinition<BsonDocument> oldDoc, BsonDocument document);
+        Task<ReplaceOneResult> ReplaceOneAsync(string collectionName, FilterDefinition<BsonDocument> oldDoc, BsonDocument document);
         Task InsertManyAsync(string collectionName, IEnumerable<BsonDocument> documents);
         Task DeleteAllAsync(string collectionName);
         Task<IAsyncCursor<BsonDocument>> FindNearAsync(string collectionName, double x, double y);

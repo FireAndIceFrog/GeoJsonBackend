@@ -29,9 +29,14 @@ public class MongoDBConnector : IMongoDBConnector
         await getCollection(collectionName).InsertManyAsync(documents);
     }
 
-    public async Task UpdateOneAsync(string collectionName, BsonDocument oldDoc, BsonDocument document)
+    public async Task<UpdateResult> UpdateOneAsync(string collectionName, FilterDefinition<BsonDocument> oldDoc, BsonDocument document)
     {
-        await getCollection(collectionName).UpdateOneAsync(oldDoc, document);
+        return await getCollection(collectionName).UpdateOneAsync(oldDoc, document);
+    }
+
+    public async Task<ReplaceOneResult> ReplaceOneAsync(string collectionName, FilterDefinition<BsonDocument> oldDoc, BsonDocument document)
+    {
+        return await getCollection(collectionName).ReplaceOneAsync(oldDoc, document);
     }
 
     public async Task<IMongoQueryable<BsonDocument>> GetDocumentsAsync(string collectionName)
@@ -40,7 +45,7 @@ public class MongoDBConnector : IMongoDBConnector
         return data;
     }
 
-    public async Task DeleteDocAsync(string collectionName, BsonDocument document)
+    public async Task DeleteDocAsync(string collectionName, FilterDefinition<BsonDocument> document)
     {
         await getCollection(collectionName).DeleteOneAsync(document);
     }

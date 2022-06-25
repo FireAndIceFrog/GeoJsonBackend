@@ -7,6 +7,7 @@ public interface IMapLayerService
     public Task<string> GetFeatures(double x, double y, double z);
 
     public Task CreateFeature(object data);
-
+    public Task UpdateFeatures(object data);
+    public Task DeleteFeatureAsync(object data);
     public Task<bool> ClearAllData();
 }

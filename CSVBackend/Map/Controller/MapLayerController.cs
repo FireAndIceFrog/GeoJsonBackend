@@ -32,11 +32,25 @@ namespace CSVBackend.Controllers
             await _mapLayer.CreateFeature(data);
         }
 
+        [HttpPost]
+        [Route("UpdateFeatures")]
+        public async Task UpdateFeatures([FromBody] object data)
+        {
+            await _mapLayer.UpdateFeatures(data);
+        }
+
         [HttpGet]
         [Route("GetFeature")]
         public async Task<string> GetFeature(double x, double y, double z)
         {
             return await _mapLayer.GetFeatures(x, y, z);
+        }
+
+        [HttpPost]
+        [Route("DeleteFeature")]
+        public async Task DeleteFeature([FromBody] object data)
+        {
+            await _mapLayer.DeleteFeatureAsync(data);
         }
     }
 }
