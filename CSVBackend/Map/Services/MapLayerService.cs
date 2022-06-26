@@ -24,6 +24,24 @@ public class MapLayerService : IMapLayerService
     private readonly string headerIdField = "HeaderId";
     private Guid _id = Guid.Empty;
 
+    private BsonDocument CreateDocument<T>(GeoJsonModel<T> model)
+    {
+        return new BsonDocument()
+        {
+            new BsonElement("type", new BsonString(model?.type)),
+            new BsonElement("geometry", new BsonDocument()
+            {
+                new BsonElement("type", new BsonString(model?.geometry?.type)),
+                new BsonElement("coordinates", new BsonArray(model?.geometry?.coordinates)),
+            }),
+            new BsonElement("properties", new BsonDocument()
+            {
+                new BsonElement("backgroundColor", new BsonString(model?.properties?.backgroundColor)),
+                new BsonElement("borderColor", new BsonString(model?.properties?.borderColor)),
+            })
+        };
+    }
+
     public async Task<string> GetFeatures(double x, double y, double z)
     {
         var BsonId = new BsonBinaryData(_id, GuidRepresentation.Standard);
@@ -70,19 +88,9 @@ public class MapLayerService : IMapLayerService
                 })
                 .ToList();
             }
-            
-            var update = new BsonDocument()
-            {
-                new BsonElement("_id", new ObjectId(item?.properties?.id ?? "null")),
-                new BsonElement("type", new BsonString(item?.type)),
-                new BsonElement("geometry", new BsonDocument()
-                {
-                    new BsonElement("type", new BsonString(item?.geometry?.type)),
-                    new BsonElement("coordinates", new BsonArray(item?.geometry?.coordinates)),
-                }),
-                new BsonElement("properties", new BsonDocument())
-            };
 
+            var update = CreateDocument(item!);
+            update.Add(new BsonElement("_id", new ObjectId(item?.properties?.id ?? "null")));
 
             var builder = Builders<BsonDocument>.Filter;
             return await _mongoDataAccess.ReplaceOneAsync(_collectionName, builder.Eq("_id", new ObjectId(item?.properties?.id)), update);
@@ -122,17 +130,8 @@ public class MapLayerService : IMapLayerService
                 .ToList();
             }
 
-            var insert = new BsonDocument()
-            {
-                new BsonElement("type", new BsonString(item?.type)),
-                new BsonElement("geometry", new BsonDocument()
-                {
-                    new BsonElement("type", new BsonString(item?.geometry?.type)),
-                    new BsonElement("coordinates", new BsonArray(item?.geometry?.coordinates)),
-                }),
-                new BsonElement("properties", new BsonDocument())
-            };
 
+            var insert = CreateDocument(item!);
 
             return _mongoDataAccess.InsertOneAsync(_collectionName, insert);
         })
