@@ -8,6 +8,6 @@ public interface IMapLayerService
 
     public Task CreateFeature(object data);
     public Task UpdateFeatures(object data);
-    public Task DeleteFeatureAsync(object data);
+    public Task DeleteFeaturesAsync(object data);
     public Task<bool> ClearAllData();
 }

@@ -50,7 +50,7 @@ public class MongoDBConnector : IMongoDBConnector
         await getCollection(collectionName).DeleteOneAsync(document);
     }
 
-    public async Task DeleteAllAsync(string collectionName)
+    public async Task DeleteManyAsync(string collectionName, FilterDefinition<BsonDocument> document)
     {
         await getCollection(collectionName).DeleteManyAsync(new BsonDocument());
     }

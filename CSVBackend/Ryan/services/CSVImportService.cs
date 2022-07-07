@@ -299,9 +299,8 @@ public class CSVImportService : ICSVImportService
 
     public async Task<bool> ClearAllData()
     {
-
-        await _mongoDataAccess.DeleteAllAsync(_collectionName);
-        await _mongoDataAccess.DeleteAllAsync(_tableHeaderName);
+        await _mongoDataAccess.DeleteManyAsync(_collectionName, new BsonDocument());
+        await _mongoDataAccess.DeleteManyAsync(_tableHeaderName, new BsonDocument());
 
         return true;
     }

@@ -13,7 +13,7 @@ namespace MongoDB
         Task<UpdateResult> UpdateOneAsync(string collectionName, FilterDefinition<BsonDocument> oldDoc, BsonDocument document);
         Task<ReplaceOneResult> ReplaceOneAsync(string collectionName, FilterDefinition<BsonDocument> oldDoc, BsonDocument document);
         Task InsertManyAsync(string collectionName, IEnumerable<BsonDocument> documents);
-        Task DeleteAllAsync(string collectionName);
+        Task DeleteManyAsync(string collectionName, FilterDefinition<BsonDocument> document);
         Task<IAsyncCursor<BsonDocument>> FindNearAsync(string collectionName, double x, double y);
     }
 }

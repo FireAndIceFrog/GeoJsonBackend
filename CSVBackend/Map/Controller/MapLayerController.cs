@@ -47,10 +47,10 @@ namespace CSVBackend.Controllers
         }
 
         [HttpPost]
-        [Route("DeleteFeature")]
-        public async Task DeleteFeature([FromBody] object data)
+        [Route("DeleteFeatures")]
+        public async Task DeleteFeatures([FromBody] object data)
         {
-            await _mapLayer.DeleteFeatureAsync(data);
+            await _mapLayer.DeleteFeaturesAsync(data);
         }
     }
 }

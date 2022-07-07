@@ -147,18 +147,27 @@ public class MapLayerService : IMapLayerService
     public async Task<bool> ClearAllData()
     {
 
-        await _mongoDataAccess.DeleteAllAsync(_collectionName);
-        await _mongoDataAccess.DeleteAllAsync(_tableHeaderName);
+        await _mongoDataAccess.DeleteManyAsync(_collectionName, new BsonDocument());
+        await _mongoDataAccess.DeleteManyAsync(_tableHeaderName, new BsonDocument());
 
         return true;
     }
 
-    public async Task DeleteFeatureAsync(object data)
+    public async Task DeleteFeaturesAsync(object data)
     {
+        if(data == null)
+        {
+            return;
+        }
 
-        var deserializedData = JsonConvert.DeserializeObject<GeoJsonModel<dynamic>>(data.ToString());
-        var id = new ObjectId(deserializedData!.properties!.id);
+        var deserializedData = JsonConvert.DeserializeObject<List<string>>(data.ToString()?? "[]");
+        
         var builder = Builders<BsonDocument>.Filter;
-        await _mongoDataAccess.DeleteDocAsync(_collectionName, builder.Eq("_id", id));
+
+        var containsIdList = deserializedData!.Select((id) => builder.Eq("_id", new ObjectId(id)));
+        var filter = builder.Or(
+            containsIdList
+        );
+        await _mongoDataAccess.DeleteManyAsync(_collectionName, filter);
     }
 }
