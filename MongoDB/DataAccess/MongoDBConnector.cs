@@ -39,10 +39,17 @@ public class MongoDBConnector : IMongoDBConnector
         return await getCollection(collectionName).ReplaceOneAsync(oldDoc, document);
     }
 
+    public async Task<IAsyncCursor<BsonDocument>> FindDocumentsAsync(string collectionName, FilterDefinition<BsonDocument> filter)
+    {
+        var collection = await Task.FromResult(getCollection(collectionName));
+        var filtedCollection = await collection.FindAsync(filter);
+
+        return filtedCollection;
+    }
+
     public async Task<IMongoQueryable<BsonDocument>> GetDocumentsAsync(string collectionName)
     {
-        var data = await Task.FromResult(getCollection(collectionName).AsQueryable());
-        return data;
+        return await Task.FromResult(getCollection(collectionName).AsQueryable());
     }
 
     public async Task DeleteDocAsync(string collectionName, FilterDefinition<BsonDocument> document)

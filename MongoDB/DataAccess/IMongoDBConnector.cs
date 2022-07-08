@@ -8,6 +8,7 @@ namespace MongoDB
     public interface IMongoDBConnector
     {
         Task InsertOneAsync(string collectionName, BsonDocument document);
+        Task<IAsyncCursor<BsonDocument>> FindDocumentsAsync(string collectionName, FilterDefinition<BsonDocument> filter);
         Task<IMongoQueryable<BsonDocument>> GetDocumentsAsync(string collectionName);
         Task DeleteDocAsync(string collectionName, FilterDefinition<BsonDocument> document);
         Task<UpdateResult> UpdateOneAsync(string collectionName, FilterDefinition<BsonDocument> oldDoc, BsonDocument document);
