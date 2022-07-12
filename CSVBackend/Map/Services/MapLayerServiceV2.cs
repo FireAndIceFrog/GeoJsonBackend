@@ -4,6 +4,8 @@ using MongoDB;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CSVBackend.Map.Services
 {
@@ -12,28 +14,50 @@ namespace CSVBackend.Map.Services
         private readonly IGeoJsonDataAccess _geoJsonDataAccess;
         private readonly IMongoDBConnector _mongoDataAccess;
         private const string _featuresCollection = "features";
+        private const string _propertiesCollection = "feature_properties";
 
         public MapLayerServiceV2(IGeoJsonDataAccess geoJsonDataAccess, IMongoDBConnector mongoDataAccess)
         {
             _geoJsonDataAccess = geoJsonDataAccess;
             _mongoDataAccess = mongoDataAccess;
         }
-        private BsonDocument CreateDocument<T>(GeoJsonModel<T> model)
+        private (BsonDocument, BsonDocument[]) CreateDocument<T>(GeoJsonModel<T> model)
         {
-            return new BsonDocument()
+            var id = model?.properties?.id ==null ? 
+                new ObjectId(model!.properties!.id) : ObjectId.GenerateNewId();
+
+            var feature = new BsonDocument()
             {
+                new BsonElement("_id", new BsonObjectId(id)),
                 new BsonElement("type", new BsonString(model?.type)),
+                new BsonElement("version", new BsonInt32((model?.version ?? -1) + 1 )),
                 new BsonElement("geometry", new BsonDocument()
                 {
                     new BsonElement("type", new BsonString(model?.geometry?.type)),
                     new BsonElement("coordinates", new BsonArray(model?.geometry?.coordinates)),
                 }),
-                new BsonElement("properties", new BsonDocument()
-                {
-                    new BsonElement("backgroundColor", new BsonString(model?.properties?.backgroundColor)),
-                    new BsonElement("borderColor", new BsonString(model?.properties?.borderColor)),
-                })
             };
+
+            var properties = new BsonDocument[]
+            {
+                new BsonDocument()
+                {
+                    new BsonElement("feature_id", new BsonObjectId(id)),
+                    new BsonElement("key", new BsonString("backgroundColor")),
+                    new BsonElement("value", new BsonString(model!.properties.backgroundColor)),
+                    new BsonElement("version", new BsonInt32((model.properties.version ?? -1) + 1 )),
+                },
+
+                new BsonDocument()
+                {
+                    new BsonElement("feature_id", new BsonObjectId(id)),
+                    new BsonElement("key", new BsonString("borderColor")),
+                    new BsonElement("value", new BsonString(model!.properties.borderColor)),
+                    new BsonElement("version", new BsonInt32((model.properties.version ?? -1) + 1 )),
+                },
+            };
+
+            return (feature, properties);
         }
 
         public async Task<string> GetFeatures(double x, double y, double z)
@@ -63,9 +87,48 @@ namespace CSVBackend.Map.Services
             throw new NotImplementedException();
         }
 
-        public Task CreateFeature(object data)
+        public async Task CreateFeature(object data)
         {
-            throw new NotImplementedException();
+            if (data == null)
+            {
+                return;
+            }
+            var deserializedData = JsonConvert.DeserializeObject<GeoJsonModelList<dynamic>>(data!.ToString()!);
+
+            var tasks = deserializedData?.features?.Select((item) =>
+            {
+                item!.properties.id = null;
+                if (item?.geometry?.coordinates != null)
+                {
+                    item.geometry.coordinates = item.geometry.coordinates.Select((ring) =>
+                    {
+                        return ring.Select((point) =>
+                        {
+                            if (point is JArray)
+                                return (point as JArray)?.Select((coordinate) => double.Parse(coordinate.ToString()));
+                            else
+                                return double.Parse(point);
+                        })
+                        .ToList();
+                    })
+                    .ToList();
+                }
+
+                var (features, properties) = CreateDocument(item!);
+
+                return Task.WhenAll(
+                    _mongoDataAccess.InsertOneAsync(_featuresCollection, features),
+                    _mongoDataAccess.InsertManyAsync(_propertiesCollection, properties)
+                );
+
+            })
+            .ToArray();
+
+            if (tasks != null && tasks.Any())
+            {
+                await Task.WhenAll(tasks);
+            }
+            return;
         }
 
         public Task DeleteFeaturesAsync(object data)
