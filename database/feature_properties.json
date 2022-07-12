@@ -1,0 +1,21 @@
+[{
+  "_id": {
+    "$oid": "62cab213bfcd2080b017387f"
+  },
+  "feature_id": {
+    "$oid": "62c6a15bdc1cf0e0f54192bf"
+  },
+  "key": "backgroundColor",
+  "value": "#000000",
+  "version": 0
+},{
+  "_id": {
+    "$oid": "62cab257bfcd2080b0173882"
+  },
+  "feature_id": {
+    "$oid": "62c6a15bdc1cf0e0f54192bf"
+  },
+  "key": "borderColor",
+  "value": "#000000",
+  "version": 0
+}]
