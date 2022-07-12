@@ -16,5 +16,6 @@ namespace MongoDB
         Task InsertManyAsync(string collectionName, IEnumerable<BsonDocument> documents);
         Task DeleteManyAsync(string collectionName, FilterDefinition<BsonDocument> document);
         Task<IAsyncCursor<BsonDocument>> FindNearAsync(string collectionName, double x, double y);
+        Task<IAsyncCursor<TOutput>> RunPipelineAsync<TOutput>(string collectionName, BsonDocument[] stages);
     }
 }

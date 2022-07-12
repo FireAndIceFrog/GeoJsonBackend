@@ -47,6 +47,13 @@ public class MongoDBConnector : IMongoDBConnector
         return filtedCollection;
     }
 
+    public async Task<IAsyncCursor<TOutput>> RunPipelineAsync<TOutput>(string collectionName, BsonDocument[] stages)
+    {
+        PipelineDefinition<BsonDocument, TOutput> pipeline = stages;
+        var cursor = await getCollection(collectionName).AggregateAsync(pipeline);
+        return cursor;
+    }
+
     public async Task<IMongoQueryable<BsonDocument>> GetDocumentsAsync(string collectionName)
     {
         return await Task.FromResult(getCollection(collectionName).AsQueryable());

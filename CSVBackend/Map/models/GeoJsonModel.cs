@@ -11,6 +11,7 @@
         public string? type { get; set; }
         public GeoJsonGeometry<T>? geometry { get; set; }
         public GeoJsonProperties? properties { get; set; }
+        public int? version {get; set;}
     }
 
     public class GeoJsonGeometry<T>
@@ -21,9 +22,9 @@
 
     public class GeoJsonProperties 
     { 
-        public string id { get; set; }
-        public string backgroundColor { get; set; }
-        public string borderColor { get; set; }
-        public string version { get; set;  }
+        public string? id { get; set; }
+        public string? backgroundColor { get; set; }
+        public string? borderColor { get; set; }
+        public int? version { get; set;  }
     }
 }

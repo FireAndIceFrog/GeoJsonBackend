@@ -43,7 +43,6 @@ public class MapLayerService : IMapLayerService
 
     public async Task<string> GetFeatures(double x, double y, double z)
     {
-        var BsonId = new BsonBinaryData(_id, GuidRepresentation.Standard);
         var asyncDocs = await _mongoDataAccess.FindNearAsync(_collectionName, x, y);
 
         var docs = await asyncDocs.ToListAsync();
