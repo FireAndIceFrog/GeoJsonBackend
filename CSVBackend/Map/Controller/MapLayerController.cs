@@ -34,9 +34,9 @@ namespace CSVBackend.Controllers
 
         [HttpPost]
         [Route("UpdateFeatures")]
-        public async Task UpdateFeatures([FromBody] object data)
+        public async Task<string> UpdateFeatures([FromBody] object data)
         {
-            await _mapLayer.UpdateFeatures(data);
+            return await _mapLayer.UpdateFeatures(data);
         }
 
         [HttpGet]

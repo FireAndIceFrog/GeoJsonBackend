@@ -65,11 +65,11 @@ public class MapLayerService : IMapLayerService
         return new  { features = processedDocs }.ToJson();
     }
 
-    public async Task UpdateFeatures(object data)
+    public async Task<string> UpdateFeatures(object data)
     {
         if(data == null)
         {
-            return;
+            return "[]";
         }
         var deserializedData = JsonConvert.DeserializeObject<GeoJsonModelList<dynamic>>(data.ToString());
 
@@ -111,7 +111,7 @@ public class MapLayerService : IMapLayerService
 
         await _geoJsonDataAccess.SaveFeaturePropertyChangesToPipeline(_collectionName);
 
-        return;
+        return "[]";
     }
 
     public async Task CreateFeature(object data)
