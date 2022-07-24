@@ -1,10 +1,62 @@
-﻿using MongoDB.Bson;
+﻿using MongoDB;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace CSVBackend.Map.DataAccess
 {
     public class GeoJsonDataAccess : IGeoJsonDataAccess
     {
+        public const string PropertiesHistoryCollection = "feature_properties_history";
+
+        private readonly IMongoDBConnector _mongoDataAccess;
+        public GeoJsonDataAccess(IMongoDBConnector mongoDataAccess)
+        {
+            _mongoDataAccess = mongoDataAccess;
+
+        }
+
+        public async Task DeleteFeaturePropertyHistory(List<string> data)
+        {
+            var builder = Builders<BsonDocument>.Filter;
+            var containsFeatureIdList = data!.Select((id) => builder.Eq("feature_id", new ObjectId(id)));
+            var containsFeatureFilter = builder.Or(
+                containsFeatureIdList
+            );
+
+            await _mongoDataAccess.DeleteManyAsync(PropertiesHistoryCollection, containsFeatureFilter);
+        }
+
+        public async Task SaveFeaturePropertyChangesToPipeline(string collectionName) 
+        {
+            var pipeline =  new []
+            {
+                new BsonDocument("$set",
+                    new BsonDocument
+                        {
+                            { "properties.feature_id", "$_id" },
+                            { "properties.version", "$version" }
+                        }),
+                    new BsonDocument("$replaceRoot",
+                    new BsonDocument("newRoot", "$properties")),
+                    new BsonDocument("$merge",
+                        new BsonDocument
+                        {
+                            { "into", PropertiesHistoryCollection },
+                            { "on",
+                                new BsonArray
+                                {
+                                    "feature_id",
+                                    "version"
+                                } 
+                            },
+                            { "whenMatched", "keepExisting" },
+                            { "whenNotMatched", "insert" }
+                        })
+            };
+
+            await _mongoDataAccess.RunPipelineAsync<BsonDocument>(collectionName, pipeline);
+        }
+
         public BsonDocument[] GetFeaturePipelineByPoint(double lat, double lon)
         {
             var pipeline = new[]

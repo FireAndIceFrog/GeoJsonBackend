@@ -25,6 +25,5 @@
         public string? id { get; set; }
         public string? backgroundColor { get; set; }
         public string? borderColor { get; set; }
-        public int? version { get; set;  }
     }
 }

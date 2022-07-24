@@ -29,7 +29,7 @@ var mongoDBName = builder.Configuration.GetValue<string>("MongoDbName");
 builder.Services.AddSingleton<IMongoDBConnector>(new MongoDBConnector(mongConnString, mongoDBName));
 builder.Services.AddSingleton<ICSVImportService, CSVImportService>();
 builder.Services.AddSingleton<IGeoJsonDataAccess, GeoJsonDataAccess>();
-builder.Services.AddSingleton<IMapLayerService, MapLayerServiceV2>();
+builder.Services.AddSingleton<IMapLayerService, MapLayerService>();
 
 var app = builder.Build();
 
