@@ -6,6 +6,7 @@ using System.Globalization;
 using Newtonsoft.Json;
 using CSVBackend.Map.models;
 using CSVBackend.Map.DataAccess;
+using MongoDB.Bson.Serialization;
 
 namespace CSVBackend.Map.Services;
 
@@ -92,7 +93,7 @@ public class MapLayerService : IMapLayerService
             }
 
             ++item!.version;
-            if(item!.properties!.id == null)
+            if (item!.properties!.id == null)
             {
                 throw new Exception("Cannot have null id when editing");
             }
@@ -100,18 +101,49 @@ public class MapLayerService : IMapLayerService
             update.Add(new BsonElement("_id", new ObjectId(item!.properties!.id)));
 
             var builder = Builders<BsonDocument>.Filter;
-            return await _mongoDataAccess.ReplaceOneAsync(_collectionName, builder.Eq("_id", new ObjectId(item?.properties?.id)), update);
-        })
-        .ToArray();
+            var getFilter = builder.And(
+                builder.Eq("_id", new ObjectId(item?.properties?.id)),
+                builder.Gte("version", new BsonInt32((int)item.version))
+            );
 
+            var docs = await _mongoDataAccess.FindDocumentsAsync(_collectionName, getFilter);
+            var foundDoc = docs.ToEnumerable().FirstOrDefault();
+            if (foundDoc == null)
+            {
+                await _mongoDataAccess.ReplaceOneAsync(_collectionName, builder.Eq("_id", new ObjectId(item?.properties?.id)), update);
+                return null;
+            }
+            else
+            {
+                var id = foundDoc.GetValue("_id").AsObjectId;
+                foundDoc.Remove("_id");
+
+                var properties = foundDoc.GetValue("properties");
+                properties.AsBsonDocument.Set("id", id.ToString());
+                foundDoc.Set("properties", properties);
+
+                var foundItem = BsonSerializer.Deserialize<GeoJsonModel<dynamic>>(foundDoc);
+                return new SaveConflicts()
+                {
+                    after = foundItem,
+                    before = item,
+                };
+            }
+        }).ToArray();
+
+        IEnumerable<SaveConflicts> results = new List<SaveConflicts>();
         if(tasks != null && tasks.Any())
         {
-            var results = await Task.WhenAll(tasks);
+            var foundTasks = await Task.WhenAll(tasks);
+            if (foundTasks.Any())
+            {
+                results = foundTasks!.Where(result => result != null);
+            }        
         }
 
         await _geoJsonDataAccess.SaveFeaturePropertyChangesToPipeline(_collectionName);
 
-        return "[]";
+        return results.ToJson();
     }
 
     public async Task CreateFeature(object data)
