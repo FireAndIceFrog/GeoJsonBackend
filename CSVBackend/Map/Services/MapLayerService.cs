@@ -107,7 +107,8 @@ public class MapLayerService : IMapLayerService
             );
 
             var docs = await _mongoDataAccess.FindDocumentsAsync(_collectionName, getFilter);
-            var foundDoc = docs.ToEnumerable().FirstOrDefault();
+            var foundDocs = docs.ToEnumerable().ToList();
+            var foundDoc = foundDocs.FirstOrDefault();
             if (foundDoc == null)
             {
                 await _mongoDataAccess.ReplaceOneAsync(_collectionName, builder.Eq("_id", new ObjectId(item?.properties?.id)), update);
@@ -121,13 +122,18 @@ public class MapLayerService : IMapLayerService
                 var properties = foundDoc.GetValue("properties");
                 properties.AsBsonDocument.Set("id", id.ToString());
                 foundDoc.Set("properties", properties);
-
-                var foundItem = BsonSerializer.Deserialize<GeoJsonModel<dynamic>>(foundDoc);
-                return new SaveConflicts()
+                try
                 {
-                    after = foundItem,
-                    before = item,
-                };
+                    var foundItem = JsonConvert.DeserializeObject<GeoJsonModel<dynamic>>(foundDoc.ToString())!;
+                    return new SaveConflicts()
+                    {
+                        before = foundItem,
+                        after = item,
+                    };
+                } catch(Exception e)
+                {
+                    return null;
+                }
             }
         }).ToArray();
 
@@ -143,7 +149,7 @@ public class MapLayerService : IMapLayerService
 
         await _geoJsonDataAccess.SaveFeaturePropertyChangesToPipeline(_collectionName);
 
-        return results.ToJson();
+        return JsonConvert.SerializeObject(results);
     }
 
     public async Task CreateFeature(object data)
